@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>
+      $(TargetsForTfmSpecificBuildOutput);PackReferencedProjectOutputs
+    </TargetsForTfmSpecificBuildOutput>
+    <PackageId>MarketingBox.Affiliate.Service.MyNoSql</PackageId>
+    <Authors>MyJetWallet</Authors>
+    <Company>MyJetWallet</Company>
+    <Product>MarketingBox</Product>
+    <PackageProjectUrl>https://github.com/MyJetWallet/MarketingBox.Affiliate.Service</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MyJetWallet/MarketingBox.Affiliate.Service</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Common\**" />
+    <EmbeddedResource Remove="Common\**" />
+    <None Remove="Common\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.0.2" />
+    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.1.6" />
+    <PackageReference Include="MyJetWallet.Sdk.ServiceBus" Version="2.1.0" />
+    <PackageReference Include="MyNoSqlServer.Abstractions" Version="1.0.5" />
+    <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.4.2" />
+  </ItemGroup>
+
+</Project>
