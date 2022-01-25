@@ -7,7 +7,7 @@
   <ItemGroup>
     <ProjectReference PrivateAssets="All" Include="..\Service.Fireblocks.Settlement.Domain.Models\Service.Fireblocks.Settlement.Domain.Models.csproj" />
     <ProjectReference PrivateAssets="All" Include="..\Service.Fireblocks.Settlement.Grpc\Service.Fireblocks.Settlement.Grpc.csproj" />
-    <ProjectReference Include="..\Service.Fireblocks.Settlement.MyNoSql\Service.Fireblocks.Settlement.MyNoSql.csproj" />
+    <ProjectReference PrivateAssets="All" Include="..\Service.Fireblocks.Settlement.MyNoSql\Service.Fireblocks.Settlement.MyNoSql.csproj" />
   </ItemGroup>
 
   <ItemGroup>
