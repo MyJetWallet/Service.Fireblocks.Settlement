@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -28,8 +27,8 @@ namespace Service.Fireblocks.Settlement.Services
         {
             _logger = logger;
             _startTransferMessagePublisher = startTransferMessagePublisher;
-            this._dbContextOptionsBuilder = dbContextOptionsBuilder;
-            this._assetMappingNoSql = assetMappingNoSql;
+            _dbContextOptionsBuilder = dbContextOptionsBuilder;
+            _assetMappingNoSql = assetMappingNoSql;
         }
 
         public async Task<CreateTransferResponse> CreateTransferToBrokerAsync(CreateTransferRequest request)
@@ -89,7 +88,7 @@ namespace Service.Fireblocks.Settlement.Services
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error creating VaultAccount {context}", request.ToJson());
+                _logger.LogError(e, "Error creating Transfer {context}", request.ToJson());
 
                 return new CreateTransferResponse
                 {

@@ -8,6 +8,7 @@ using Service.Fireblocks.Settlement.ServiceBus.Transfers;
 using Service.Fireblocks.Api.Client;
 using Service.Fireblocks.Signer.Client;
 using Service.Fireblocks.Webhook.Subscribers;
+using Service.Fireblocks.Settlement.MyNoSql.Addresses;
 
 namespace Service.Fireblocks.Settlement.Modules
 {
@@ -22,6 +23,8 @@ namespace Service.Fireblocks.Settlement.Modules
 
             builder.RegisterMyNoSqlReader<AssetMappingNoSql>(myNoSqlClient, AssetMappingNoSql.TableName);
             builder.RegisterMyNoSqlReader<VaultAssetNoSql>(myNoSqlClient, VaultAssetNoSql.TableName);
+
+            builder.RegisterMyNoSqlWriter<VaultAccountNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), VaultAccountNoSql.TableName);
 
             builder.RegisterMyServiceBusPublisher<StartTransferMessage>(serviceBusClient, Topics.StartTransferInternalTopic, false);
 

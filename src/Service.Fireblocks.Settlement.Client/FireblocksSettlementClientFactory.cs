@@ -12,5 +12,7 @@ namespace Service.Fireblocks.Settlement.Client
         }
 
         public ITransferService GetTransferServiceService() => CreateGrpcService<ITransferService>();
+
+        public IManagedVaultAccountService GetManagedVaultAccountServiceService() => CreateGrpcService<IManagedVaultAccountService>();
     }
 }

@@ -55,6 +55,7 @@ namespace Service.Fireblocks.Settlement
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcSchema<TransferService, ITransferService>();
+                endpoints.MapGrpcSchema<ManagedVaultAccountService, IManagedVaultAccountService>();
 
                 endpoints.MapGrpcSchemaRegistry();
 

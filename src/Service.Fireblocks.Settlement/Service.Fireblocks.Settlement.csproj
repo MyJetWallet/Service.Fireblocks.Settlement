@@ -32,6 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Service.Fireblocks.Settlement.Domain\Service.Fireblocks.Settlement.Domain.csproj" />
     <ProjectReference Include="..\Service.Fireblocks.Settlement.Grpc\Service.Fireblocks.Settlement.Grpc.csproj" />
+    <ProjectReference Include="..\Service.Fireblocks.Settlement.MyNoSql\Service.Fireblocks.Settlement.MyNoSql.csproj" />
     <ProjectReference Include="..\Service.Fireblocks.Settlement.Postgres\Service.Fireblocks.Settlement.Postgres.csproj" />
     <ProjectReference Include="..\Service.Fireblocks.Settlement.ServiceBus\Service.Fireblocks.Settlement.ServiceBus.csproj" />
   </ItemGroup>

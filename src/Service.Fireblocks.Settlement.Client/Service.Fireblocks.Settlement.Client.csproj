@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference PrivateAssets="All" Include="..\Service.Fireblocks.Settlement.Domain.Models\Service.Fireblocks.Settlement.Domain.Models.csproj" />
     <ProjectReference PrivateAssets="All" Include="..\Service.Fireblocks.Settlement.Grpc\Service.Fireblocks.Settlement.Grpc.csproj" />
+    <ProjectReference Include="..\Service.Fireblocks.Settlement.MyNoSql\Service.Fireblocks.Settlement.MyNoSql.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
     <PackageReference Include="MyJetWallet.Sdk.GrpcMetrics" Version="2.0.4" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
     <PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
+	<PackageReference Include="MyNoSqlServer.DataReader" Version="1.4.2" />
   </ItemGroup>
 
   <PropertyGroup>
