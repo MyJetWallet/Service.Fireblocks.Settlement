@@ -49,7 +49,7 @@ namespace Service.Fireblocks.Webhook.Subscribers
             {
                 await _semaphoreSlim.WaitAsync();
                 await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-                var transfer = await context.Transfers.FirstOrDefaultAsync(x => 
+                var transfer = await context.Transfers.FirstOrDefaultAsync(x =>
                              x.AsssetSymbol == message.AsssetSymbol &&
                              x.AsssetNetwork == message.AsssetNetwork &&
                              x.Status == Settlement.Domain.Models.Transfers.TransferStatus.Started);
@@ -89,6 +89,12 @@ namespace Service.Fireblocks.Webhook.Subscribers
 
                 await foreach (var balances in streamBalances)
                 {
+                    _logger.LogInformation("Processing stream StartTransferMessage: {@context}", new
+                    {
+                        Balances = balances.ToJson(),
+                        Message = logContext,
+                    });
+
                     if (balances.Error != null)
                     {
                         if (balances.Error.ErrorCode == Api.Grpc.Models.Common.ErrorCode.DoesNotExist)
@@ -115,6 +121,11 @@ namespace Service.Fireblocks.Webhook.Subscribers
 
                         if (transaction.Error != null)
                         {
+                            _logger.LogError("Error creating transaction StartTransferMessage: {@context}", new
+                            {
+                                Error = transaction.ToJson(),
+                                Message = logContext,
+                            });
                             throw new Exception(transaction.Error.Message);
                         }
                     }
@@ -125,12 +136,13 @@ namespace Service.Fireblocks.Webhook.Subscribers
                     await context.SaveChangesAsync();
                 }
 
-                {
-                    transfer.Status = Settlement.Domain.Models.Transfers.TransferStatus.Completed;
-                    transfer.CompletedAt = DateTime.UtcNow;
-                    context.Transfers.Update(transfer);
-                    await context.SaveChangesAsync();
-                }
+                _logger.LogInformation("Saving result StartTransferMessage: {@context}", logContext);
+                transfer.Status = Settlement.Domain.Models.Transfers.TransferStatus.Completed;
+                transfer.CompletedAt = DateTime.UtcNow;
+                context.Transfers.Update(transfer);
+                await context.SaveChangesAsync();
+
+                _logger.LogInformation("Completed StartTransferMessage: {@context}", logContext);
             }
             catch (Exception ex)
             {
