@@ -9,5 +9,8 @@ namespace Service.Fireblocks.Settlement.Grpc
     {
         [OperationContract]
         Task<CreateTransferResponse> CreateTransferToBrokerAsync(CreateTransferRequest request);
+
+        [OperationContract]
+        Task<GetTransfersResponse> GetTransfersAsync(GetTransfersRequest request);
     }
 }

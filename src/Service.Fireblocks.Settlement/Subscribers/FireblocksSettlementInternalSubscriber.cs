@@ -20,8 +20,6 @@ namespace Service.Fireblocks.Webhook.Subscribers
     public class FireblocksSettlementInternalSubscriber
     {
         private readonly ILogger<FireblocksSettlementInternalSubscriber> _logger;
-        private readonly IMyNoSqlServerDataReader<AssetMappingNoSql> _assetMappingNoSql;
-        private readonly IMyNoSqlServerDataReader<VaultAssetNoSql> _vaultAssetNoSql;
         private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
         private readonly IVaultAccountService _vaultAccountService;
         private readonly ITransactionService _transactionService;
@@ -30,16 +28,12 @@ namespace Service.Fireblocks.Webhook.Subscribers
         public FireblocksSettlementInternalSubscriber(
             ISubscriber<StartTransferMessage> subscriber,
             ILogger<FireblocksSettlementInternalSubscriber> logger,
-            IMyNoSqlServerDataReader<AssetMappingNoSql> assetMappingNoSql,
-            IMyNoSqlServerDataReader<VaultAssetNoSql> vaultAssetNoSql,
             DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder,
             IVaultAccountService vaultAccountService,
             ITransactionService transactionService)
         {
             subscriber.Subscribe(HandleMessagel);
             _logger = logger;
-            _assetMappingNoSql = assetMappingNoSql;
-            _vaultAssetNoSql = vaultAssetNoSql;
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
             _vaultAccountService = vaultAccountService;
             _transactionService = transactionService;
@@ -55,7 +49,8 @@ namespace Service.Fireblocks.Webhook.Subscribers
             {
                 await _semaphoreSlim.WaitAsync();
                 await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-                var transfer = await context.Transfers.FirstOrDefaultAsync(x => x.AsssetSymbol == message.AsssetSymbol &&
+                var transfer = await context.Transfers.FirstOrDefaultAsync(x => 
+                             x.AsssetSymbol == message.AsssetSymbol &&
                              x.AsssetNetwork == message.AsssetNetwork &&
                              x.Status == Settlement.Domain.Models.Transfers.TransferStatus.Started);
 
@@ -66,6 +61,7 @@ namespace Service.Fireblocks.Webhook.Subscribers
                         AsssetNetwork = message.AsssetNetwork,
                         AsssetSymbol = message.AsssetSymbol,
                         AccountsInTransfers = 0,
+                        TotalBalance = 0m,
                         StartedAt = DateTime.UtcNow,
                         CompletedAt = null,
                         DestinationVaultAccountId = message.DestinationVaultAccountId,
@@ -73,9 +69,10 @@ namespace Service.Fireblocks.Webhook.Subscribers
                         Status = Settlement.Domain.Models.Transfers.TransferStatus.Started,
                         Type = Settlement.Domain.Models.Transfers.TransferType.FromIntermediateToBroker,
                         FireblocksAssetId = message.FireblocksAssetId,
+                        UserId = message.UserId,
                     };
 
-                    var rowsCount = await context.Transfers.AddAsync(transfer);
+                    await context.Transfers.AddAsync(transfer);
                     await context.SaveChangesAsync();
                 }
 
@@ -85,9 +82,9 @@ namespace Service.Fireblocks.Webhook.Subscribers
                 var streamBalances = _vaultAccountService.GetBalancesForAssetAsync(new()
                 {
                     BatchSize = 100,
-                    FireblocksAssetId = message.FireblocksAssetId,
+                    FireblocksAssetId = transfer.FireblocksAssetId,
                     NamePrefix = "client_",
-                    Threshold = message.Threshold,
+                    Threshold = transfer.Threshold,
                 });
 
                 await foreach (var balances in streamBalances)
@@ -100,17 +97,19 @@ namespace Service.Fireblocks.Webhook.Subscribers
                             throw new Exception(balances.Error.Message);
                     }
 
+                    var balance = 0m;
                     foreach (var vaultAccount in balances.VaultAccounts)
                     {
                         var vaultAsset = vaultAccount.VaultAssets.FirstOrDefault();
+                        balance += vaultAsset.Available;
                         var transaction = await _transactionService.CreateTransactionAsync(new()
                         {
                             Amount = vaultAsset.Available,
-                            AssetNetwork = message.AsssetNetwork,
-                            AssetSymbol = message.AsssetSymbol,
+                            AssetNetwork = transfer.AsssetNetwork,
+                            AssetSymbol = transfer.AsssetSymbol,
                             TreatAsGrossAmount = true,
                             ExternalTransactionId = $"settl_{transfer.Id}_{vaultAccount.Id}_{message.DestinationVaultAccountId}",
-                            DestinationVaultAccountId = message.DestinationVaultAccountId,
+                            DestinationVaultAccountId = transfer.DestinationVaultAccountId,
                             FromVaultAccountId = vaultAccount.Id,
                         });
 
@@ -120,6 +119,7 @@ namespace Service.Fireblocks.Webhook.Subscribers
                         }
                     }
 
+                    transfer.TotalBalance += balance;
                     transfer.AccountsInTransfers += balances.VaultAccounts.Count;
                     context.Transfers.Update(transfer);
                     await context.SaveChangesAsync();

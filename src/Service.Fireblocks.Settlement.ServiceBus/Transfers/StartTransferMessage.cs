@@ -24,5 +24,8 @@ namespace Service.Fireblocks.Settlement.ServiceBus.Transfers
 
         [DataMember(Order = 5)]
         public string FireblocksAssetId { get; set; }
+
+        [DataMember(Order = 6)]
+        public string UserId { get; set; }
     }
 }

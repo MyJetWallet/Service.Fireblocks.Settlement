@@ -25,5 +25,7 @@ namespace Service.Fireblocks.Settlement.Postgres.Models
         public DateTimeOffset StartedAt { get; set; }
 
         public DateTimeOffset? CompletedAt { get; set; }
+        public decimal TotalBalance { get; set; }
+        public string UserId { get; set; }
     }
 }

@@ -16,5 +16,8 @@ namespace Service.Fireblocks.Settlement.Grpc.Models.VaultAssets
 
         [DataMember(Order = 4)]
         public decimal Threshold { get; set; }
+
+        [DataMember(Order = 5)]
+        public string UserId { get; set; }
     }
 }

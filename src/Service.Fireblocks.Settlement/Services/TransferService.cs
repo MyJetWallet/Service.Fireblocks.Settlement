@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -81,7 +82,8 @@ namespace Service.Fireblocks.Settlement.Services
                     AsssetSymbol = request.AsssetSymbol,
                     DestinationVaultAccountId = request.DestinationVaultAccountId,
                     Threshold = request.Threshold,
-                    FireblocksAssetId = assetMapping.AssetMapping.FireblocksAssetId
+                    FireblocksAssetId = assetMapping.AssetMapping.FireblocksAssetId,
+                    UserId = request.UserId,
                 });
 
                 return new CreateTransferResponse { };
@@ -91,6 +93,53 @@ namespace Service.Fireblocks.Settlement.Services
                 _logger.LogError(e, "Error creating Transfer {context}", request.ToJson());
 
                 return new CreateTransferResponse
+                {
+                    Error = new Grpc.Models.Common.ErrorResponse
+                    {
+                        ErrorCode = Grpc.Models.Common.ErrorCode.Unknown,
+                        Message = e.Message
+                    }
+                };
+            }
+        }
+
+        public async Task<GetTransfersResponse> GetTransfersAsync(GetTransfersRequest request)
+        {
+            try
+            {
+                await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
+                var transfers = await context.Transfers
+                    .Where(e => e.Id > request.LastId)
+                    .OrderByDescending(e => e.Id)
+                    .Take(request.BatchSize)
+                    .ToListAsync();
+
+                return new GetTransfersResponse 
+                { 
+                    IdForNextQuery = transfers.Count > 0 ? transfers.First().Id : 0,
+                    Transfers = transfers.Select(x => new Domain.Models.Transfers.Transfer
+                    {
+                        AccountsInTransfers = x.AccountsInTransfers,
+                        AsssetNetwork = x.AsssetNetwork,
+                        AsssetSymbol = x.AsssetSymbol,
+                        CompletedAt = x.CompletedAt.HasValue ? x.CompletedAt.Value.UtcDateTime : null,
+                        DestinationVaultAccountId = x.DestinationVaultAccountId,
+                        FireblocksAssetId = x.FireblocksAssetId,
+                        Id = x.Id,
+                        StartedAt = x.StartedAt.UtcDateTime,
+                        Status = x.Status,
+                        Threshold = x.Threshold,
+                        TotalBalance = x.TotalBalance,
+                        Type = x.Type,
+                        UserId = x.UserId
+                    }).ToArray(),
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error GetTransfersResponse {context}", request.ToJson());
+
+                return new GetTransfersResponse
                 {
                     Error = new Grpc.Models.Common.ErrorResponse
                     {

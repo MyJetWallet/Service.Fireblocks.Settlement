@@ -27,7 +27,8 @@ namespace TestApp
                 AsssetNetwork = "fireblocks-eth-test",
                 AsssetSymbol = "ETH",
                 DestinationVaultAccountId = "60",//"16",
-                Threshold = 0.1m
+                Threshold = 0.1m,
+                UserId = "TestConsole"
             });
 
             //Console.WriteLine(resp?.VaultAccount?.FirstOrDefault().Id);
