@@ -36,6 +36,16 @@ namespace Service.Fireblocks.Settlement.Services
         {
             try
             {
+                if (string.IsNullOrEmpty(request.DestinationVaultAccountId))
+                    return new CreateTransferResponse
+                    {
+                        Error = new Grpc.Models.Common.ErrorResponse
+                        {
+                            Message = $"DestinationVaultAccountId should not be empty",
+                            ErrorCode = Grpc.Models.Common.ErrorCode.ApiError
+                        }
+                    };
+
                 var assetMapping = _assetMappingNoSql.Get(
                     AssetMappingNoSql.GeneratePartitionKey(request.AsssetSymbol), 
                     AssetMappingNoSql.GenerateRowKey(request.AsssetNetwork));
