@@ -108,6 +108,10 @@ namespace Service.Fireblocks.Webhook.Subscribers
                     {
                         var vaultAsset = vaultAccount.VaultAssets.FirstOrDefault();
                         balance += vaultAsset.Available;
+
+                        //Force sweep is enabled only for POLKADOT Settlements
+                        var forceSweep = transfer.AsssetSymbol == "DOT";
+
                         var transaction = await _transactionService.CreateTransactionAsync(new()
                         {
                             Amount = vaultAsset.Available,
@@ -117,6 +121,7 @@ namespace Service.Fireblocks.Webhook.Subscribers
                             ExternalTransactionId = $"settl_{transfer.Id}_{vaultAccount.Id}_{message.DestinationVaultAccountId}",
                             DestinationVaultAccountId = transfer.DestinationVaultAccountId,
                             FromVaultAccountId = vaultAccount.Id,
+                            ForceSweep = forceSweep,
                         });
 
                         if (transaction.Error != null)
