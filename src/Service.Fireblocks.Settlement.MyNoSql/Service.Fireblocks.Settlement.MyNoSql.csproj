@@ -17,11 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.1.6" />
-    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.1.7" />
+    <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.2.2" />
+    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.2.2" />
     <PackageReference Include="MyJetWallet.Sdk.ServiceBus" Version="2.2.4" />
     <PackageReference Include="MyNoSqlServer.Abstractions" Version="1.2.6" />
-    <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.7.3" />
+    <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.8.1" />
   </ItemGroup>
 
 </Project>

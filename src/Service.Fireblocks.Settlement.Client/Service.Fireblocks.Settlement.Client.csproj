@@ -19,7 +19,7 @@
     <PackageReference Include="MyJetWallet.Sdk.GrpcMetrics" Version="2.0.4" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
     <PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
-	<PackageReference Include="MyNoSqlServer.DataReader" Version="1.7.3" />
+	<PackageReference Include="MyNoSqlServer.DataReader" Version="1.8.1" />
   </ItemGroup>
 
   <PropertyGroup>
