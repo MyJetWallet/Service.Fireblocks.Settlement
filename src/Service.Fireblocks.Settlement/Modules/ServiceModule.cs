@@ -19,7 +19,7 @@ namespace Service.Fireblocks.Settlement.Modules
             var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
                 Program.ReloadedSettings(e => e.SpotServiceBusHostPort),
                 Program.LogFactory);
-            var myNoSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
+            var myNoSqlClient = builder.CreateNoSqlClient(Program.Settings.MyNoSqlReaderHostPort, Program.LogFactory);
 
             builder.RegisterMyNoSqlReader<AssetMappingNoSql>(myNoSqlClient, AssetMappingNoSql.TableName);
             builder.RegisterMyNoSqlReader<VaultAssetNoSql>(myNoSqlClient, VaultAssetNoSql.TableName);
