@@ -31,5 +31,8 @@ namespace Service.Fireblocks.Settlement.Settings
 
         [YamlProperty("FireblocksSettlement.PostgresConnectionString")]
         public string PostgresConnectionString { get; internal set; }
+
+        [YamlProperty("FireblocksSettlement.GasStationNetworks")]
+        public string GasStationNetworks { get; internal set; }
     }
 }

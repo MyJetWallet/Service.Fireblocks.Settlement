@@ -9,6 +9,7 @@ using Service.Fireblocks.Api.Grpc;
 using Service.Fireblocks.Settlement.Postgres;
 using Service.Fireblocks.Settlement.Postgres.Models;
 using Service.Fireblocks.Settlement.ServiceBus.Transfers;
+using Service.Fireblocks.Settlement.Settings;
 using Service.Fireblocks.Signer.Grpc;
 using System;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace Service.Fireblocks.Webhook.Subscribers
         private readonly ILogger<FireblocksSettlementInternalSubscriber> _logger;
         private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
         private readonly IVaultAccountService _vaultAccountService;
+        private readonly IGasStationService _gasStationService;
         private readonly ITransactionService _transactionService;
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
 
@@ -30,12 +32,14 @@ namespace Service.Fireblocks.Webhook.Subscribers
             ILogger<FireblocksSettlementInternalSubscriber> logger,
             DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder,
             IVaultAccountService vaultAccountService,
+            IGasStationService gsStationService,
             ITransactionService transactionService)
         {
             subscriber.Subscribe(HandleMessagel);
             _logger = logger;
             _dbContextOptionsBuilder = dbContextOptionsBuilder;
             _vaultAccountService = vaultAccountService;
+            this._gasStationService = gsStationService;
             _transactionService = transactionService;
         }
 
@@ -112,7 +116,7 @@ namespace Service.Fireblocks.Webhook.Subscribers
                         //Force sweep is enabled only for POLKADOT Settlements
                         var forceSweep = transfer.AsssetSymbol == "DOT";
 
-                        var transaction = await _transactionService.CreateTransactionAsync(new()
+                        var request = new Signer.Grpc.Models.Transactions.CreateTransactionRequest()
                         {
                             Amount = vaultAsset.Available,
                             AssetNetwork = transfer.AsssetNetwork,
@@ -122,7 +126,45 @@ namespace Service.Fireblocks.Webhook.Subscribers
                             DestinationVaultAccountId = transfer.DestinationVaultAccountId,
                             FromVaultAccountId = vaultAccount.Id,
                             ForceSweep = forceSweep,
-                        });
+                        };
+
+                        if (GasStetionNetworks.GasStationNetworksCache.Contains(transfer.AsssetNetwork))
+                        {
+                            var estimation = await _transactionService.EstimateTransactionAsync(GetEstimation(request));
+
+                            if (estimation.Error != null)
+                            {
+                                _logger.LogError("Error estimating transaction StartTransferMessage: {@context}", new
+                                {
+                                    Error = estimation.ToJson(),
+                                    Message = logContext,
+                                });
+                                throw new Exception(estimation.Error.Message);
+                            }
+
+                            var slitlyBiggerGasPrice = estimation.Medium.GasPrice * 1.1m;
+                            var newCap = estimation.Medium.GasLimit * slitlyBiggerGasPrice;
+
+                            var gasResponse = await _gasStationService.SetGasStationAsync(new Api.Grpc.Models.GasStation.SetGasStationRequest
+                            {
+                                GasCap = newCap,
+                                GasThreshold = newCap,
+                                MaxGasPrice = slitlyBiggerGasPrice
+                            });
+
+                            if (gasResponse.Error != null)
+                            {
+                                _logger.LogError("Error settings gas station StartTransferMessage: {@context}", new
+                                {
+                                    Error = estimation.ToJson(),
+                                    Message = logContext,
+                                });
+                                throw new Exception(estimation.Error.Message);
+                            }
+
+                        }
+
+                        var transaction = await _transactionService.CreateTransactionAsync(request);
 
                         if (transaction.Error != null)
                         {
@@ -159,6 +201,24 @@ namespace Service.Fireblocks.Webhook.Subscribers
             {
                 _semaphoreSlim.Release();
             }
+        }
+
+        private static Signer.Grpc.Models.Transactions.EstimateTransactionRequest GetEstimation(Signer.Grpc.Models.Transactions.CreateTransactionRequest request)
+        {
+            return new Signer.Grpc.Models.Transactions.EstimateTransactionRequest
+            {
+                Amount = request.Amount,
+                AssetNetwork = request.AssetNetwork,
+                AssetSymbol = request.AssetSymbol,
+                ClientId = request.ClientId,
+                DestinationVaultAccountId = request.DestinationVaultAccountId,
+                ExternalTransactionId = request.ExternalTransactionId,
+                ForceSweep = request.ForceSweep,
+                FromVaultAccountId = request.FromVaultAccountId,
+                Tag = request.Tag,
+                ToAddress = request.ToAddress,
+                TreatAsGrossAmount = request.TreatAsGrossAmount,
+            };
         }
     }
 }

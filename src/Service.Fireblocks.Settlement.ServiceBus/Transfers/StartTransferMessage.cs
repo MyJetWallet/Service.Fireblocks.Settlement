@@ -10,6 +10,8 @@ namespace Service.Fireblocks.Settlement.ServiceBus.Transfers
     [DataContract]
     public class StartTransferMessage
     {
+        public const string ServiceBusMessageTopic = "jet-wallet-fireblocks-settlement-transfer-internal";
+
         [DataMember(Order = 1)]
         public string DestinationVaultAccountId { get; set; }
 
