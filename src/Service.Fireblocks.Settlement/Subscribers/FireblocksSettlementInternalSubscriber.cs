@@ -142,8 +142,8 @@ namespace Service.Fireblocks.Webhook.Subscribers
                                 throw new Exception(estimation.Error.Message);
                             }
 
-                            var slitlyBiggerGasPrice = estimation.Medium.GasPrice * 0.000000001m * 1.1m; // in eth + 10 %
-                            var newCap = estimation.Medium.GasLimit * slitlyBiggerGasPrice;
+                            var slitlyBiggerGasPrice = estimation.Medium.GasPrice * 1.1m; // + 10 %
+                            var newCap = estimation.Medium.GasLimit * slitlyBiggerGasPrice * 0.000000001m; // in eth
 
                             var gasResponse = await _gasStationService.SetGasStationAsync(new Api.Grpc.Models.GasStation.SetGasStationRequest
                             {
